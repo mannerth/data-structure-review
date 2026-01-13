@@ -827,7 +827,7 @@ void dijkstra(int n, int s) {
 ```
 
 ```C++
-//from OI wiki you'q
+//from OI wiki 优先队列实现newreachable
 struct edge {
   int v, w;
 };
