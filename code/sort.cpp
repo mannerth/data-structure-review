@@ -65,6 +65,31 @@ void mergeSort(T *arr, int n){
     delete[] temp;
 }
 
+// 对[l, r)进行快速排序
+template<class T>
+void quickSort(T* beginP, T* endP){
+    if( beginP>=endP ) return;
+
+    T* l = beginP;
+    T* r = endP-1;
+    T pivot = *beginP;
+    
+    while( l < r ){
+        while( *r >= pivot && l<r ) r--;
+        if( r==l ) break;
+        *l = *r;
+
+        while( *l <= pivot && l<r ) l++;
+        if( r==l ) break;
+        *r = *l;
+    }
+
+    *l = pivot;
+
+    quickSort(beginP, l);
+    quickSort(l+1, endP);
+}
+
 class MyData{
 public:
     int x;
@@ -99,7 +124,7 @@ int main(){
     // }
 
     int arr[] = {5, 1, 6, 11, -1};
-    mergeSort(arr, 5);
+    quickSort(arr, arr+5);
     for(int i = 0; i < 5; ++i){
         cout << arr[i] << endl;
     }

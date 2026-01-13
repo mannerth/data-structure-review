@@ -123,7 +123,7 @@ $$
 在内存中按顺序是$a[0][0], a[1][0], a[2][0], ... a[m-1][0], a[0][1], ...$
 
 再来看多维的情况。我们知道，n维数组可以理解为n-1维数组的**数组**，我们需要先安排n-1维数组，然后再把它们组织起来。现在我们有一个n维数组$ a[u_1][u_2]...[u_n] $
-- 行主映射：$ map_n(i_1, i_2,...i_n) = map_h( i_1, map_{n-1}(i_2, i_3,...i_{n} ) ) = i_1*u_2*u_3...*u_n + map_{n-1}(i_2, i_3,...i_{n}) = ... = i_1*u_2*u_3...*u_n + i_2*u_3*u_4...u_n + ... + i_n$  
+- 行主映射：$$ map_n(i_1, i_2,...i_n) = map_h( i_1, map_{n-1}(i_2, i_3,...i_{n} ) ) = i_1*u_2*u_3...*u_n + map_{n-1}(i_2, i_3,...i_{n}) = ... = i_1*u_2*u_3...*u_n + i_2*u_3*u_4...u_n + ... + i_n$$  
 - 列主映射：$ map_n(i_1, i_2,...i_n) = map_l( map_{n-1}(i_1, i_2,...i_{n-1} ), i_n) = i_n*u_1*u_2...*u_{n-1} + map_{n-1}(i_1, i_2,...i_{n-1}) = ... = i_n*u_1*u_2...*u_{n-1} + i_{n-1}*u_1*u_2...*u_{n-2} + ... + i_1 $  
 
 记忆法：行主映射后面的下标变化引起的变化小，列主映射前面的下标变化引起的变化小。
@@ -588,6 +588,8 @@ RL
 
 <img src="./assets/RL.png" alt="image-20260111224547947" style="zoom:80%;" />
 
+只需调整一次
+
 记忆法：A节点需要向另一侧（平衡侧）退，非平衡侧选一个上到A的位置，从路径上涉及到的离A最近的两个。非平衡侧为左，则选二者中的较大者；非平衡侧为右，则选二者中的较小者；并把其子节点左仍左，右仍右（如果有）。
 
 #### 删除
@@ -747,7 +749,9 @@ else 失败，图中有环
 
 
 
-### 单源最短路
+### 单源最短路Dijkstra
+
+[P4779 【模板】单源最短路径（标准版） - 洛谷](https://www.luogu.com.cn/problem/P4779)
 
 在带权有向图中，求一个顶点（源点）到其它所有顶点的最短路径。
 
@@ -762,7 +766,7 @@ else 失败，图中有环
 
 - distanceFromSource[n]: 存储每个顶点到源点的最短路径值
 - *newReachable: 线性表，存储下一步可到达的顶点
-- predecessor[n]: 存储从sourceVertex到某个顶点的路径中该顶点前面的那个顶点
+- predecessor[n]: 存储从sourceVertex到某个顶点的路径中该顶点前面的那个顶点，可以追溯最短路径
 
 伪代码：
 
@@ -792,6 +796,72 @@ while( newReachable不为空 ){
 ```
 
 时间复杂度：课本上是 $ O(n^2) $, 可以更优。
+
+```C++
+//from OI wiki, 不使用newReachable
+struct edge {
+  int v, w;
+};
+
+vector<edge> e[MAXN];
+int dis[MAXN], vis[MAXN];
+
+void dijkstra(int n, int s) {
+  //把dis填充一个较大值
+  memset(dis, 0x3f, (n + 1) * sizeof(int));
+  dis[s] = 0;
+  
+  for (int i = 1; i <= n; i++) {
+    int u = 0, mind = 0x3f3f3f3f;
+    //暴力搜索dis最小的
+    for (int j = 1; j <= n; j++)
+      if (!vis[j] && dis[j] < mind) u = j, mind = dis[j];
+    vis[u] = true;
+    
+    for (auto ed : e[u]) {
+      int v = ed.v, w = ed.w;
+      if (dis[v] > dis[u] + w) dis[v] = dis[u] + w;
+    }
+  }
+}
+```
+
+```C++
+//from OI wiki you'q
+struct edge {
+  int v, w;
+};
+
+struct node {
+  int dis, u;
+
+  bool operator>(const node& a) const { return dis > a.dis; }
+};
+
+vector<edge> e[MAXN];
+int dis[MAXN], vis[MAXN];
+priority_queue<node, vector<node>, greater<node>> q;
+
+void dijkstra(int n, int s) {
+  memset(dis, 0x3f, (n + 1) * sizeof(int));
+  memset(vis, 0, (n + 1) * sizeof(int));
+  dis[s] = 0;
+  q.push({0, s});
+  while (!q.empty()) {
+    int u = q.top().u;
+    q.pop();
+    if (vis[u]) continue;
+    vis[u] = 1;
+    for (auto ed : e[u]) {
+      int v = ed.v, w = ed.w;
+      if (dis[v] > dis[u] + w) {
+        dis[v] = dis[u] + w;
+        q.push({dis[v], v});
+      }
+    }
+  }
+}
+```
 
 
 
@@ -908,6 +978,8 @@ void mergeSort(T *arr, int n){
 }
 ```
 
+
+
 ### 快速排序
 
 从序列中选取一个枢轴变量pivot，把序列划分为两个部分left和right，其中left中的元素都小于等于pivot，right中的元素都大于pivot，递归处理这两段，合并结果为left+pivot+right。pivot的选取是任意的，这里我们每次选取序列的第一个元素。
@@ -917,6 +989,35 @@ void mergeSort(T *arr, int n){
 也可以原地重排：使用两个指针l = 0，r = n。首先看r，如果a[r] <= pivot，就把它换到l的位置，接下来移动l，如果遇到大于pivot的元素就换到r的位置，接下来移动r，以此类推，直到l和r相等。
 
 这样我们甚至不用合并。
+
+```C++
+// 对[l, r)进行快速排序
+template<class T>
+void quickSort(T* beginP, T* endP){
+    if( beginP>=endP ) return;
+
+    T* l = beginP;
+    T* r = endP-1;
+    T pivot = *beginP;
+    
+    while( l < r ){
+        while( *r >= pivot && l<r ) r--;
+        if( r==l ) break;
+        *l = *r;
+
+        while( *l <= pivot && l<r ) l++;
+        if( r==l ) break;
+        *r = *l;
+    }
+
+    *l = pivot;
+
+    quickSort(beginP, l);
+    quickSort(l+1, endP);
+}
+```
+
+
 
 ### 第k小的元素
 
@@ -958,11 +1059,44 @@ int main(){
 
 ### 多源最短路Floyd(弗洛伊德)
 
-图*G*中不含有长度为负数的环路。
+[B3647 【模板】Floyd - 洛谷](https://www.luogu.com.cn/problem/B3647)
+
+图*G*中不含有长度为负数的环路。迪杰斯特拉只能处理边权非负的图，而本算法可以有负边权。
 
 定义状态：`c[i][j][k]`从 i 到 j 的最短路径值，要求中间经过的节点不大于k，初始为 i 到 j 的边权，无边则无穷大。
 
 状态转移： `c[i][j][k] = min( c[i][j][k-1], c[i][k][k-1]+c[k][j][k-1])`
+
+```C++
+//a[N][N]是邻接矩阵
+//
+//kay[i][j] 表示从i到j的最短路径中最大的k值, 用于追溯路径
+//i->j的路径：i -> kay[i][j] -> j，继续递归找i -> kay[i][j]直到0为止。
+
+//初始化
+for(int i = 1; i <= n; ++i){
+    for(int j = 1; i <= n; ++i){
+        c[i][j][0] = a[i][j];
+        kay[i][j] = 0;
+    }
+}
+
+for(int k = 1; k <= n; ++k){
+    for(int i = 1; i <= n; ++i){
+        for(int j = 1; j <= n; ++j){
+            //一般NoEdge用正无穷，防止加法溢出
+            if(	c[i][k]!=NoEdge && c[k][j]!=NoEdge &&
+      			(c[i][j]==NoEdge || c[i][j] > c[i][k] + c[k][j]) 
+              ){
+                c[i][j][k] = c[i][k][k-1]+c[k][j][k-1];
+                kay[i][j] = k;
+            }
+        }
+    }
+}
+```
+
+
 
 ## [排序](/code/sort.cpp)
 排序算法有两个额外关注的点  
@@ -996,6 +1130,6 @@ int main(){
 
 ### 堆排序
 
-### 归并排序
+### [归并排序](###归并排序)
 
-### 快速排序
+### [快速排序](###快速排序)
